@@ -1,18 +1,23 @@
-import Image from "next/image"
+import Image from 'next/image'
 import Head from 'next/head'
-import { GetStaticProps } from "next"
-import Link from "next/link"
+import { GetStaticProps } from 'next'
+import Link from 'next/link'
 
 import { useKeenSlider } from 'keen-slider/react'
 
-import { stripe } from "../lib/stripe"
-import { HomeContainer, Product, AddToCartButton, SliderContainer } from "../styles/pages/home"
+import { stripe } from '../lib/stripe'
+import {
+  HomeContainer,
+  Product,
+  AddToCartButton,
+  SliderContainer,
+} from '../styles/pages/home'
 
 import 'keen-slider/keen-slider.min.css'
-import Stripe from "stripe"
-import { Handbag } from "phosphor-react"
-import { useContext, useState } from "react"
-import { CartContext } from "@/contexts/CartContext"
+import Stripe from 'stripe'
+import { Handbag } from 'phosphor-react'
+import { useContext, useState } from 'react'
+import { CartContext } from '@/contexts/CartContext'
 
 interface HomeProps {
   products: {
@@ -28,7 +33,7 @@ export default function Home({ products }: HomeProps) {
   const [loaded, setLoaded] = useState(false)
   const { addProductIdToCart, searchProductInCart } = useContext(CartContext)
   const [sliderRef, instanceRef] = useKeenSlider({
-    mode: "free-snap",
+    mode: 'free-snap',
     slides: {
       origin: 0.19,
       perView: 3,
@@ -39,13 +44,13 @@ export default function Home({ products }: HomeProps) {
     },
     created() {
       setLoaded(true)
-    }
-  });
+    },
+  })
 
-  function HandleAddItemToCart(event){
+  function HandleAddItemToCart(event) {
     const productId = event.target.value
-    if(!searchProductInCart(productId)){
-      addProductIdToCart(productId) 
+    if (!searchProductInCart(productId)) {
+      addProductIdToCart(productId)
     }
   }
 
@@ -54,21 +59,29 @@ export default function Home({ products }: HomeProps) {
       <Head>
         <title>Home | Ignite Shop</title>
       </Head>
-      
+
       <SliderContainer>
         <HomeContainer ref={sliderRef} className="keen-slider">
-          {products.map(product => {
+          {products.map((product) => {
             return (
-              <Product key={product.id}  className="keen-slider__slide">
+              <Product key={product.id} className="keen-slider__slide">
                 <Link href={`/product/${product.id}`} prefetch={false}>
-                  <Image src={product.imageUrl} width={520} height={480} alt="" />
+                  <Image
+                    src={product.imageUrl}
+                    width={520}
+                    height={480}
+                    alt=""
+                  />
                 </Link>
                 <footer>
                   <div>
                     <strong>{product.name}</strong>
                     <span>{product.price}</span>
                   </div>
-                  <AddToCartButton value={product.id} onClick={HandleAddItemToCart}>
+                  <AddToCartButton
+                    value={product.id}
+                    onClick={HandleAddItemToCart}
+                  >
                     <Handbag size={32} color={'white'} />
                   </AddToCartButton>
                 </footer>
@@ -83,18 +96,20 @@ export default function Home({ products }: HomeProps) {
               onClick={(e) => {
                 console.log(instanceRef)
                 return e.stopPropagation() || instanceRef.current?.prev()
-                }
-              }
+              }}
               disabled={currentSlide === 0}
             />
 
             <Arrow
-              onClick={(e) =>{
-                (currentSlide >= instanceRef.current.track.details.slides.length - 2) ? e.stopPropagation() : instanceRef.current?.next()
-              }
-              }
+              onClick={(e) => {
+                currentSlide >=
+                instanceRef.current.track.details.slides.length - 2
+                  ? e.stopPropagation()
+                  : instanceRef.current?.next()
+              }}
               disabled={
-                currentSlide === instanceRef.current.track.details.slides.length - 2
+                currentSlide ===
+                instanceRef.current.track.details.slides.length - 2
               }
             />
           </>
@@ -105,12 +120,12 @@ export default function Home({ products }: HomeProps) {
 }
 
 function Arrow(props) {
-  const disabeld = props.disabled ? " arrow--disabled" : ""
+  const disabeld = props.disabled ? ' arrow--disabled' : ''
   return (
     <svg
       onClick={props.onClick}
       className={`arrow ${
-        props.left ? "arrow--left" : "arrow--right"
+        props.left ? 'arrow--left' : 'arrow--right'
       } ${disabeld}`}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
@@ -127,12 +142,11 @@ function Arrow(props) {
 
 export const getStaticProps: GetStaticProps = async () => {
   const response = await stripe.products.list({
-    expand: ['data.default_price']
-  });
+    expand: ['data.default_price'],
+  })
 
-
-  const products = response.data.map(product => {
-    const price = product.default_price as Stripe.Price;
+  const products = response.data.map((product) => {
+    const price = product.default_price as Stripe.Price
 
     return {
       id: product.id,
@@ -140,15 +154,15 @@ export const getStaticProps: GetStaticProps = async () => {
       imageUrl: product.images[0],
       price: new Intl.NumberFormat('pt-BR', {
         style: 'currency',
-        currency: 'BRL'
+        currency: 'BRL',
       }).format(price.unit_amount / 100),
     }
   })
 
   return {
     props: {
-      products
+      products,
     },
-    revalidate: 60 * 60 * 2 // 2 hours,
+    revalidate: 60 * 60 * 2, // 2 hours,
   }
 }
